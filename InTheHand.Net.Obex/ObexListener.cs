@@ -14,6 +14,7 @@ using InTheHand.Net.Sockets;
 using InTheHand.Net.Bluetooth;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using InTheHand.Net.Bluetooth.Sdp;
 using InTheHand.Net.Bluetooth.AttributeIds;
 
@@ -63,7 +64,7 @@ namespace InTheHand.Net
         /// <param name="transport">Specifies the transport protocol to use.
         /// </param>
         public ObexListener(ObexTransport transport)
-        { 
+        {
             switch (transport)
             {
                 case ObexTransport.Bluetooth:
@@ -266,6 +267,61 @@ namespace InTheHand.Net
                 Debug.WriteLine(s.GetHashCode().ToString("X8") + ": Accepted", "ObexListener");
 
                 return new ObexListenerContext(s);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Waits for an incoming request and returns when one is received.
+        /// </summary>
+        /// -
+        /// <remarks>
+        /// <para>This method blocks waiting for a new connection.  It will
+        /// return when a new connection completes or 
+        /// <see cref="M:InTheHand.Net.ObexListener.Stop"/>/<see cref="M:InTheHand.Net.ObexListener.Close"/>
+        /// has been called.
+        /// </para>
+        /// </remarks>
+        /// -
+        /// <returns>Returns a <see cref="T:InTheHand.Net.ObexListenerContext"/>
+        /// or <see langword="null"/> if
+        /// <see cref="M:InTheHand.Net.ObexListener.Stop"/>/<see cref="M:InTheHand.Net.ObexListener.Close"/>
+        /// has been called.
+        /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
+        public ObexListenerContext2 GetContext2()
+        {
+            if (!listening)
+            {
+                throw new InvalidOperationException("Listener not started");
+            }
+
+            try
+            {
+                Socket s;
+
+                switch (transport)
+                {
+                    case ObexTransport.Bluetooth:
+                        s = bListener.AcceptBluetoothClient().Client;
+                        break;
+                    case ObexTransport.IrDA:
+#if NO_IRDA
+                        throw new NotSupportedException("No IrDA on this platform.");
+#else
+                        s = iListener.AcceptIrDAClient().Client;
+                        break;
+#endif
+                    default:
+                        s = tListener.AcceptTcpClient().Client;
+                        break;
+                }
+                Debug.WriteLine(s.GetHashCode().ToString("X8") + ": Accepted", "ObexListener2");
+
+                return new ObexListenerContext2(s);
             }
             catch
             {

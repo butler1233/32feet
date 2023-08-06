@@ -21,21 +21,31 @@ namespace InTheHand.Net
     /// <summary>
     /// Describes an incoming OBEX request to an <see cref="T:InTheHand.Net.ObexListener"/> object.
     /// </summary>
-    public class ObexListenerRequest
+    public class ObexListenerRequest2
     {
         private byte[] input;
-        private WebHeaderCollection headers;
         private EndPoint localEndPoint;
         private EndPoint remoteEndPoint;
         private Uri uri;
 
+        private string _name;
+        private string _type;
+        private long _length;
+
+        private const string NAME_HEADER = "NAME";
+        private const string LENGTH_HEADER = "LENGTH";
+        private const string TYPE_HEADER = "TYPE";
+
         #region Constructor
-        internal ObexListenerRequest(byte[] input, WebHeaderCollection headers, EndPoint localEndPoint, EndPoint remoteEndPoint)
+        internal ObexListenerRequest2(byte[] input, WebHeaderCollection headers, EndPoint localEndPoint, EndPoint remoteEndPoint)
         {
             this.input = input;
-            this.headers = headers;
             this.localEndPoint = localEndPoint;
             this.remoteEndPoint = remoteEndPoint;
+
+            _name = ObexHeaderHelper.GetLast(headers[NAME_HEADER]);
+            _type = ObexHeaderHelper.GetLast(headers[TYPE_HEADER]);
+            _length = long.Parse(ObexHeaderHelper.GetLast(headers[LENGTH_HEADER]));
         }
         #endregion
 
@@ -51,13 +61,7 @@ namespace InTheHand.Net
         {
             get
             {
-                string len = ObexHeaderHelper.GetLast(headers["LENGTH"]);
-
-                if (len != null && len != "")
-                {
-                    return long.Parse(len);
-                }
-                return -1;
+                return _length;
             }
         }
         #endregion
@@ -71,22 +75,18 @@ namespace InTheHand.Net
         {
             get
             {
-                return headers["TYPE"];
+                return _type;
             }
         }
         #endregion
 
         #region Headers
-        /// <summary>
-        /// Gets the collection of header name/value pairs sent in the request.
-        /// </summary>
-        /// <value>A <see cref="WebHeaderCollection"/> that contains the OBEX headers included in the request.</value>
-        /// <remarks>For a complete list of request headers, see the <see cref="T:InTheHand.Net.ObexHeader"/> enumeration.</remarks>
-        public WebHeaderCollection Headers
+
+        public string Name
         {
             get
             {
-                return headers;
+                return _name;
             }
         }
         #endregion
@@ -270,7 +270,7 @@ namespace InTheHand.Net
                     {
                         address = ((IrDAEndPoint)this.localEndPoint).Address.ToString();
                     }
-                    uri = new Uri("obex-push://" + address + "/" + headers["NAME"]);
+                    uri = new Uri("obex-push://" + address + "/" + _name);
                 }
                 return uri;
             }

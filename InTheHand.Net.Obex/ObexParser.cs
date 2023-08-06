@@ -87,8 +87,8 @@ namespace InTheHand.Net
                             }
                             else
                             {
-                                Debug.Assert(-1 == Array.IndexOf<string>(headers.AllKeys, header.ToString().ToUpper()),
-                                    "Duplicate headers causes comma-separated HTTP list!!: " + header.ToString().ToUpper());
+                                //Debug.Assert(-1 == Array.IndexOf<string>(headers.AllKeys, header.ToString().ToUpper()),
+                                //    "Duplicate headers causes comma-separated HTTP list!!: " + header.ToString().ToUpper());
                             }
                         }
                         headers.Add(header.ToString().ToUpper(), intValue.ToString());
